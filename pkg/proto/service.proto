@@ -1,0 +1,46 @@
+// Copyright (c) 2023 AccelByte Inc. All Rights Reserved.
+// This is licensed software from AccelByte Inc, for limitations
+// and restrictions contact your company contract manager.
+
+syntax = "proto3";
+
+option csharp_namespace = "AccelByte.Extend.ServiceExtension";
+option go_package = "accelbyte.net/extend/serviceextension";
+option java_package = "net.accelbyte.extend.serviceextension";
+option java_multiple_files = true;
+
+package service;
+
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+service Service {
+
+  rpc GetTaskExecutionCount(GetTaskExecutionCountRequest) returns (GetTaskExecutionCountResponse) {
+    option (google.api.http) = {
+      post: "/v1/tasks/execution/count"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Get the count of task executions"
+      description: "Retrieves the total number of task executions processed by the service."
+    };
+  }
+}
+
+message GetTaskExecutionCountRequest {
+}
+
+message GetTaskExecutionCountResponse {
+  // The total count of task executions.
+  int64 count = 1;
+}
+
+// OpenAPI options for the entire API.
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info: {
+    title: "Service API";
+    version: "1.0";
+  };
+  base_path: "/service";
+};
