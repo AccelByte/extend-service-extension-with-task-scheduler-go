@@ -33,7 +33,7 @@ endpoints.
 
 This template includes integration with the Task Scheduler Service, which allows 
 your service to receive and handle scheduled task execution events. The Task 
-Scheduler Service uses a bidirectional streaming gRPC method `OnJobTriggered` 
+Scheduler Service uses a bidirectional streaming gRPC method `RunScheduledTask` 
 to send execution contexts to your service.
 
 When a scheduled task is triggered:
@@ -43,7 +43,7 @@ When a scheduled task is triggered:
 - The service responds with a `Response` to acknowledge receipt
 - Heartbeat messages (`HEART_BEAT`) are also sent periodically to maintain the connection
 
-The `taskSchedulerService.go` file implements the `OnJobTriggered` handler, which 
+The `taskSchedulerService.go` file implements the `RunScheduledTask` handler, which 
 processes these events and increments the task execution count in `myService.go`. 
 You can query the current task execution count using the `GetTaskExecutionCount` 
 REST endpoint.
@@ -253,36 +253,27 @@ This app can be tested locally through the Swagger UI.
 
    ![swagger-interface](./docs/images/swagger-interface.png)
 
-4. The `OnJobTriggered` gRPC method uses bidirectional streaming. You can send messages to trigger tasks:
-
-   **To send a TASK_START message:**
+4. Call the `RunScheduledTask` gRPC method using Postman with the following payload:
 
    ```json
    {
-     "message_type": "TASK_START",
-     "cron_expression": "0 0 * * *"
+      "run_id": "12345",
+      "task_id": "daily_cleanup_task",
+      "namespace": "my-game-namespace",
+      "task_name": "Daily Database Cleanup",
+      "scheduled_time": "2025-01-27T10:00:00Z",
+      "attempt_number": 1
    }
    ```
 
-   **To send a HEART_BEAT message:**
+5. When `RunScheduledTask` gRPC method is called, it will:
 
-   ```json
-   {
-     "message_type": "HEART_BEAT"
-   }
-   ```
-
-5. When you send a `TASK_START` message to the `OnJobTriggered` gRPC handler, it will:
-
-   - Log the task execution with the cron expression
+   - Log the task execution
    - Increment the task execution count
-   - Send a response back when the task is complete
-   - Log success or handle any exceptions
 
 6. Check the application logs to see the task execution details from the gRPC handler:
 
-   - `Task started with cron expression: <cron_expression>` - Task started
-   - `Received heartbeat with cron expression: <cron_expression>` - Heartbeat received
+   - `Task started` - Task started
    - Or error messages if an exception occurs
 
 7. You can query the task execution count by calling the `GetTaskExecutionCount` endpoint through Swagger UI:
@@ -291,8 +282,6 @@ This app can be tested locally through the Swagger UI.
    - Click "Try it out"
    - Click "Execute" to get the current task execution count
    - The response will contain the `count` field with the total number of task executions
-
-> :exclamation: **Note**: The task scheduler handler processes tasks in a streaming fashion. The server will respond with an empty `Response` message when a task completes successfully.
 
 ### Test Observability
 
