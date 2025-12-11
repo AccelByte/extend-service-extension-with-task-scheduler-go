@@ -43,7 +43,7 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	pb "extend-custom-task-service/pkg/pb"
-	ts "extend-custom-task-service/pkg/pb/generic/task_scheduler/v1"
+	ts "extend-custom-task-service/pkg/pb/task_scheduler"
 
 	sdkAuth "github.com/AccelByte/accelbyte-go-sdk/services-api/pkg/utils/auth"
 	prometheusGrpc "github.com/grpc-ecosystem/go-grpc-prometheus"
@@ -147,7 +147,7 @@ func main() {
 
 	// Register Task Scheduler Service
 	taskSchedulerService := service.NewTaskSchedulerService(myServiceServer)
-	ts.RegisterTaskSchedulerServiceServer(s, taskSchedulerService)
+	ts.RegisterScheduledTaskHandlerServer(s, taskSchedulerService)
 
 	// Enable gRPC Reflection
 	reflection.Register(s)
