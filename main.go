@@ -58,14 +58,12 @@ const (
 )
 
 var (
-	serviceName = common.GetEnv("OTEL_SERVICE_NAME", "ExtendCustomServiceGo")
+	serviceName = "extend-app-service-extension-task"
 	logLevelStr = common.GetEnv("LOG_LEVEL", logrus.InfoLevel.String())
 	basePath    = common.GetBasePath()
 )
 
 func main() {
-	logrus.Infof("Starting %s...", serviceName)
-
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -188,6 +186,9 @@ func main() {
 	logrus.Infof("Metrics endpoint: (:%d%s)", metricsPort, metricsEndpoint)
 
 	// Set Tracer Provider
+	if val := common.GetEnv("OTEL_SERVICE_NAME", ""); val != "" {
+		serviceName = "extend-app-se-task-" + strings.ToLower(val)
+	}
 	tracerProvider, err := common.NewTracerProvider(serviceName)
 	if err != nil {
 		logrus.Fatalf("Failed to create tracer provider: %v", err)
