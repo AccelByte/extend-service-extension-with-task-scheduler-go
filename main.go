@@ -113,7 +113,7 @@ func main() {
 		common.Validator = common.NewTokenValidator(oauthService, time.Duration(refreshInterval)*time.Second, true)
 		err := common.Validator.Initialize(ctx)
 		if err != nil {
-			logrus.Infof(err.Error())
+			logrus.Info(err.Error())
 		}
 
 		unaryServerInterceptor := common.NewUnaryAuthServerIntercept()
@@ -250,9 +250,21 @@ func newGRPCGatewayHTTPServer(
 	// Add logging middleware
 	loggedMux := loggingMiddleware(logger, mux)
 
+	// Add CORS middleware as the outermost layer so that browser preflight
+	// (OPTIONS) requests are answered here before reaching the gateway mux.
+	// It is inert unless CORS_ENABLED=true, so behavior is unchanged by default.
+	corsConfig := common.LoadCORSConfigFromEnv()
+	corsHandler := common.NewCORSMiddleware(corsConfig, logger)(loggedMux)
+	if corsConfig.Active() {
+		logger.WithFields(logrus.Fields{
+			"allowedOrigins":   corsConfig.AllowedOrigins,
+			"allowCredentials": corsConfig.AllowCredentials,
+		}).Info("CORS enabled")
+	}
+
 	return &http.Server{
 		Addr:     addr,
-		Handler:  loggedMux,
+		Handler:  corsHandler,
 		ErrorLog: log.New(os.Stderr, "httpSrv: ", log.LstdFlags), // Configure the logger for the HTTP server
 	}
 }
